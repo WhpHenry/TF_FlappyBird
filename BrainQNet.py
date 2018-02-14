@@ -1,6 +1,7 @@
 
 import tensorflow as tf 
 import numpy as np 
+import cv2
 import random
 from collections import deque
 
@@ -10,9 +11,9 @@ _BATCH_SIZE = 32         # size of minibatch
 _OBSERVE = 100.          # timesteps to observe before training
 _EXPLORE = 150000.       # frames over which to anneal epsilon
 _FINAL_EPSILON = 0.001   # final value of epsilon
-_INITIAL_EPSILON = 0.09  # starting value of epsilon
+_INITIAL_EPSILON = 0.01  # starting value of epsilon
 _REPLAY_MEMORY = 50000   # number of previous transitions to remember
-_SAVE_NET_TIMES = 10000
+_SAVE_NET_TIMES = 1000
 
 
 class BrainQNet:
@@ -75,7 +76,7 @@ class BrainQNet:
         else:
             print ("Could not find old network weights")
 
-    def trainQNetwork(self):
+    def trainQNetwork(self, reward, oriImg):
         minibatch = random.sample(self.replayMemory, _BATCH_SIZE)
         state_batch = [data[0] for data in minibatch]
         action_batch = [data[1] for data in minibatch]
@@ -98,22 +99,30 @@ class BrainQNet:
             self.xInput: state_batch
             })
 
+
+        if self.timeStep % 100 == 0:
+
+            print("** TimeStep: {}, Reward: {}, Epsilon: {}, **".format(self.timeStep, reward, self.epsilon))
+
         if self.timeStep % _SAVE_NET_TIMES == 0 :
             print("In {} time step training, Saving session".format(self.timeStep))
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.timeStep)
+            cv2.imwrite("saved_networks/" + str(self.timeStep) + ".png", oriImg)
 
         # if self.timeStep > _MAX_TRAINING_TIMES:
         #     raise Exception("over max training times")
 
-    def setPerception(self, nextImg, action, reward, terminal):
+    def setPerception(self, nextImg, action, reward, terminal, oriImg):
         newState = np.append(self.currentState[:,:,1:],nextImg,axis = 2)
         self.replayMemory.append((self.currentState,action,reward,newState,terminal))
         if len(self.replayMemory) > _REPLAY_MEMORY:
             self.replayMemory.popleft()
         if self.timeStep > _OBSERVE:
-            self.trainQNetwork()
+            # print("training in: ", self.timeStep)
+            self.trainQNetwork(reward, oriImg)
         self.currentState = newState
         self.timeStep += 1
+
 
     def getAction(self):
         Qvalue = self.Qvalue.eval(feed_dict={self.xInput:[self.currentState]})[0]

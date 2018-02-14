@@ -28,9 +28,9 @@ def playFlappyBird():
     # start game
     while True:
         action = instance_brain.getAction()
-        nextImg, reward, terminal = instance_game.frame_step(action)
-        nextImg = preprocess(nextImg)
-        instance_brain.setPerception(nextImg, action, reward, terminal)
+        oriImg, reward, terminal = instance_game.frame_step(action)
+        nextImg = preprocess(oriImg)
+        instance_brain.setPerception(nextImg, action, reward, terminal, oriImg)
 
 
 def test():
