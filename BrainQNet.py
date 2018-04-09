@@ -107,7 +107,7 @@ class BrainQNet:
         if self.timeStep % _SAVE_NET_TIMES == 0 :
             print("In {} time step training, Saving session".format(self.timeStep))
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.timeStep)
-            cv2.imwrite("saved_networks/" + str(self.timeStep) + ".png", oriImg)
+            # cv2.imwrite("saved_networks/" + str(self.timeStep) + ".png", oriImg)
 
         # if self.timeStep > _MAX_TRAINING_TIMES:
         #     raise Exception("over max training times")
